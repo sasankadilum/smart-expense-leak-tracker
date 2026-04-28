@@ -3,10 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -18,48 +15,68 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/api/auth/login', formData);
-            
-            // Save token to keep the user logged in
             localStorage.setItem('userToken', response.data.token);
             localStorage.setItem('userName', response.data.name);
-            
             alert('Login Successful!');
-            // We will create the Dashboard route next
-            navigate('/'); 
+            navigate('/');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid credentials');
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-            <h2 style={{ textAlign: 'center' }}>Login to Your Account</h2>
-            {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-            
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <input 
-                    type="email" 
-                    name="email" 
-                    placeholder="Email Address" 
-                    onChange={handleChange} 
-                    required 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-                <input 
-                    type="password" 
-                    name="password" 
-                    placeholder="Password" 
-                    onChange={handleChange} 
-                    required 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-                <button type="submit" style={{ padding: '10px', background: '#000', color: '#fff', borderRadius: '5px', cursor: 'pointer' }}>
-                    Login
-                </button>
-            </form>
-            <p style={{ textAlign: 'center', marginTop: '15px' }}>
-                Don't have an account? <Link to="/register">Register here</Link>
-            </p>
+        <div className="min-h-screen bg-gray-50 flex items-start justify-center">
+            <div className="w-full max-w-md mx-auto px-6 py-10 md:mt-12 md:bg-white md:rounded-2xl md:shadow-lg md:px-8">
+
+                {/* Logo / Brand Mark */}
+                <div className="flex flex-col items-center mb-8">
+                    <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-3">
+                        <span className="text-white text-xl">💸</span>
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
+                    <p className="text-sm text-gray-500 mt-1">Sign in to your expense tracker</p>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                    <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+                        {error}
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Email Address"
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition"
+                    />
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition"
+                    />
+                    <button
+                        type="submit"
+                        className="w-full py-3.5 bg-black text-white text-sm font-semibold rounded-xl cursor-pointer hover:bg-gray-800 active:scale-95 transition-all duration-150 mt-1"
+                    >
+                        Login
+                    </button>
+                </form>
+
+                <p className="text-center text-sm text-gray-500 mt-6">
+                    Don't have an account?{' '}
+                    <Link to="/register" className="text-black font-semibold hover:underline">
+                        Register here
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 };

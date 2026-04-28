@@ -36,6 +36,8 @@ const getExpenses = async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching expenses' });
     }
 };
+
+
 // Get Smart Insights and Expense Leaks
 const getInsights = async (req, res) => {
     try {
@@ -94,4 +96,26 @@ const getInsights = async (req, res) => {
     }
 };
 
-module.exports = { addExpense, getExpenses, getInsights };
+// Delete an expense
+const deleteExpense = async (req, res) => {
+    try {
+        const expense = await Expense.findById(req.params.id);
+
+        if (!expense) {
+            return res.status(404).json({ message: 'Expense not found' });
+        }
+
+        // Check if the expense belongs to the logged-in user
+        if (expense.user.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        await expense.deleteOne();
+        res.status(200).json({ id: req.params.id, message: 'Expense removed' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error while deleting expense' });
+    }
+};
+
+// Update exports to include deleteExpense
+module.exports = { addExpense, getExpenses, getInsights, deleteExpense };

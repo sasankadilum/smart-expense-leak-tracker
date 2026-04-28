@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { addExpense, getExpenses, getInsights } = require('../controllers/expenseController');
+const { addExpense, getExpenses, getInsights, deleteExpense } = require('../controllers/expenseController');
 const { protect } = require('../middleware/authMiddleware');
 
-
+router.route('/:id').delete(protect, deleteExpense);
 router.get('/insights', protect, getInsights);
-// Add protect middleware to secure these routes
+
 router.route('/')
     .post(protect, addExpense)
     .get(protect, getExpenses);

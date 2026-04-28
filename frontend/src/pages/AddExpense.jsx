@@ -20,74 +20,101 @@ const AddExpense = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('userToken');
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            };
-
+            const config = { headers: { Authorization: `Bearer ${token}` } };
             await axios.post('http://localhost:5000/api/expenses', formData, config);
-            
             alert('Expense added successfully!');
-            navigate('/'); // Go back to dashboard
+            navigate('/');
         } catch (err) {
             setError(err.response?.data?.message || 'Error adding expense');
         }
     };
 
+    const inputClass =
+        'w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition';
+
+    const labelClass = 'text-xs font-semibold text-gray-500 uppercase tracking-wide';
+
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                <Link to="/" style={{ textDecoration: 'none', color: '#000', fontSize: '20px' }}>←</Link>
-                <h2 style={{ margin: 0 }}>Add Expense</h2>
+        <div className="min-h-screen bg-gray-50 flex items-start justify-center">
+            <div className="w-full max-w-md mx-auto px-6 py-8 md:mt-10 md:bg-white md:rounded-2xl md:shadow-lg md:px-8">
+
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-8">
+                    <Link
+                        to="/"
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-lg font-light"
+                    >
+                        ←
+                    </Link>
+                    <h2 className="text-xl font-bold text-gray-900 tracking-tight">Add Expense</h2>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                    <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
+                        {error}
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className={labelClass}>Amount (Rs.)</label>
+                        <input
+                            type="number"
+                            name="amount"
+                            placeholder="0"
+                            onChange={handleChange}
+                            required
+                            className={inputClass}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className={labelClass}>Category</label>
+                        <select
+                            name="category"
+                            onChange={handleChange}
+                            className={inputClass}
+                        >
+                            <option value="Food">🍔 Food</option>
+                            <option value="Transport">🚗 Transport</option>
+                            <option value="Entertainment">🎬 Entertainment</option>
+                            <option value="Bills">📄 Bills</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className={labelClass}>Date <span className="normal-case font-normal text-gray-400">(Optional — defaults to today)</span></label>
+                        <input
+                            type="date"
+                            name="date"
+                            onChange={handleChange}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <label className={labelClass}>Notes <span className="normal-case font-normal text-gray-400">(Optional)</span></label>
+                        <textarea
+                            name="note"
+                            placeholder="Add a note..."
+                            onChange={handleChange}
+                            rows={3}
+                            className={`${inputClass} resize-none`}
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full py-4 bg-black text-white text-sm font-semibold rounded-xl cursor-pointer hover:bg-gray-800 active:scale-95 transition-all duration-150 mt-1"
+                    >
+                        Save Expense
+                    </button>
+                </form>
             </div>
-            
-            {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-            
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <label>Amount (Rs.)</label>
-                <input 
-                    type="number" 
-                    name="amount" 
-                    placeholder="Enter amount" 
-                    onChange={handleChange} 
-                    required 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-
-                <label>Category</label>
-                <select 
-                    name="category" 
-                    onChange={handleChange} 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                >
-                    <option value="Food">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Bills">Bills</option>
-                    <option value="Other">Other</option>
-                </select>
-
-                <label>Date (Optional - Defaults to today)</label>
-                <input 
-                    type="date" 
-                    name="date" 
-                    onChange={handleChange} 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-
-                <label>Notes (Optional)</label>
-                <textarea 
-                    name="note" 
-                    placeholder="Add a note" 
-                    onChange={handleChange} 
-                    style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc', minHeight: '80px' }}
-                />
-
-                <button type="submit" style={{ padding: '15px', background: '#000', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', marginTop: '10px' }}>
-                    Save Expense
-                </button>
-            </form>
         </div>
     );
 };

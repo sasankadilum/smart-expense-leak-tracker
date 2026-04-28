@@ -4,45 +4,43 @@ import axios from 'axios';
 
 const Dashboard = () => {
     const [expenses, setExpenses] = useState([]);
-    const [totalSpent, setTotalSpent] = useState(0);
-    const navigate = useNavigate();
+    //Filter State 
+    const [filter, setFilter] = useState('This Month'); 
     
+    const navigate = useNavigate();
     const userName = localStorage.getItem('userName');
 
     useEffect(() => {
-        // Check if user is logged in
         const token = localStorage.getItem('userToken');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
+        if (!token) { navigate('/login'); return; }
 
-        // Fetch expenses from backend
         const fetchExpenses = async () => {
             try {
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                };
+                const config = { headers: { Authorization: `Bearer ${token}` } };
                 const response = await axios.get('http://localhost:5000/api/expenses', config);
-                
                 setExpenses(response.data);
-
-                // Calculate total spending
-                const total = response.data.reduce((acc, expense) => acc + expense.amount, 0);
-                setTotalSpent(total);
-
             } catch (error) {
                 console.error('Error fetching expenses:', error);
-                if(error.response?.status === 401) {
-                    navigate('/login'); // Token expired or invalid
-                }
+                if (error.response?.status === 401) navigate('/login');
             }
         };
 
         fetchExpenses();
     }, [navigate]);
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this expense?')) {
+            try {
+                const token = localStorage.getItem('userToken');
+                const config = { headers: { Authorization: `Bearer ${token}` } };
+                await axios.delete(`http://localhost:5000/api/expenses/${id}`, config);
+                setExpenses((prev) => prev.filter((exp) => exp._id !== id));
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Error deleting expense');
+            }
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('userToken');
@@ -50,49 +48,133 @@ const Dashboard = () => {
         navigate('/login');
     };
 
+    // Category emoji map
+    const categoryEmoji = {
+        Food: '🍔', Transport: '🚗', Entertainment: '🎬', Bills: '📄', Other: '📦'
+    };
+
+    // --- Filter Logic ---
+    const filteredExpenses = expenses.filter(expense => {
+        if (filter === 'All Time') return true;
+        
+        const expenseDate = new Date(expense.date);
+        const today = new Date();
+        
+        if (filter === 'Today') {
+            return expenseDate.toDateString() === today.toDateString();
+        }
+        
+        if (filter === 'This Month') {
+            return expenseDate.getMonth() === today.getMonth() && 
+                   expenseDate.getFullYear() === today.getFullYear();
+        }
+        return true;
+    });
+
+    
+    const currentTotal = filteredExpenses.reduce((acc, expense) => acc + expense.amount, 0);
+
     return (
-        <div style={{ maxWidth: '400px', margin: '20px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2>Welcome, {userName}! 👋</h2>
-                <button onClick={handleLogout} style={{ padding: '5px 10px', background: 'red', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Logout</button>
-            </div>
+        <div className="min-h-screen bg-gray-50 flex items-start justify-center">
+            <div className="w-full max-w-md mx-auto px-5 py-6 md:mt-8 md:bg-white md:rounded-2xl md:shadow-lg md:px-7 md:py-8">
 
-            {/* Total Spending Card */}
-            <div style={{ background: '#f4f4f4', padding: '20px', borderRadius: '10px', textAlign: 'center', marginTop: '20px' }}>
-                <p style={{ margin: 0, color: '#555' }}>Total Spent this Month</p>
-                <h1 style={{ margin: '10px 0', fontSize: '32px', color: '#000' }}>Rs. {totalSpent}</h1>
-            </div>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Good day,</p>
+                        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{userName} 👋</h2>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="px-4 py-2 bg-red-50 text-red-500 text-xs font-semibold rounded-xl border border-red-100 hover:bg-red-100 transition cursor-pointer"
+                    >
+                        Logout
+                    </button>
+                </div>
 
-            {/* Recent Transactions */}
-            <h3 style={{ marginTop: '30px' }}>Recent Transactions</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {expenses.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#888' }}>No expenses recorded yet.</p>
-                ) : (
-                    expenses.map((expense) => (
-                        <div key={expense._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '15px', border: '1px solid #eee', borderRadius: '8px' }}>
-                            <div>
-                                <h4 style={{ margin: 0 }}>{expense.category}</h4>
-                                <small style={{ color: '#888' }}>{new Date(expense.date).toLocaleDateString()}</small>
-                            </div>
-                            <h4 style={{ margin: 0 }}>Rs. {expense.amount}</h4>
+                {/* Total Spending Card (Updates based on filter) */}
+                <div className="bg-black text-white rounded-2xl px-6 py-7 text-center mb-8 shadow-md">
+                    <p className="text-xs font-medium text-gray-400 uppercase tracking-widest mb-2">
+                        Total Spent {filter === 'Today' ? 'Today' : filter === 'This Month' ? 'this Month' : 'Overall'}
+                    </p>
+                    <p className="text-4xl font-bold tracking-tight">Rs. {currentTotal.toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mt-2">{filteredExpenses.length} transaction{filteredExpenses.length !== 1 ? 's' : ''}</p>
+                </div>
+
+                {/* Transactions Header with Modern Tailwind Dropdown */}
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Recent Transactions</h3>
+                    <select 
+                        value={filter} 
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="text-xs font-semibold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg border-none outline-none cursor-pointer hover:bg-gray-200 transition focus:ring-2 focus:ring-gray-300"
+                    >
+                        <option value="Today">Today</option>
+                        <option value="This Month">This Month</option>
+                        <option value="All Time">All Time</option>
+                    </select>
+                </div>
+
+                {/* Filtered Transactions List */}
+                <div className="flex flex-col gap-3">
+                    {filteredExpenses.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <p className="text-3xl mb-2">🧾</p>
+                            <p className="text-sm">No expenses recorded for {filter.toLowerCase()}.</p>
                         </div>
-                    ))
-                )}
-            </div>
+                    ) : (
+                        filteredExpenses.map((expense) => (
+                            <div
+                                key={expense._id}
+                                className="flex items-center justify-between px-4 py-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+                            >
+                                {/* Left side */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg">
+                                        {categoryEmoji[expense.category] || '📦'}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-gray-800">{expense.category}</p>
+                                        <p className="text-xs text-gray-400">
+                                            {new Date(expense.date).toLocaleDateString('en-IN', {
+                                                day: 'numeric', month: 'short', year: 'numeric'
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
 
-            {/* Add Expense Button */}
-            <Link to="/add-expense">
-                <button style={{ width: '100%', padding: '15px', background: '#000', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', marginTop: '20px', cursor: 'pointer' }}>
-                    + Add New Expense
-                </button>
-            </Link>
-            {/* View Insights Button */}
-            <Link to="/insights">
-                <button style={{ width: '100%', padding: '15px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', marginTop: '20px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    🧠 View Smart Insights
-                </button>
-            </Link>
+                                {/* Right side */}
+                                <div className="flex items-center gap-3">
+                                    <p className="text-sm font-bold text-gray-900">Rs. {expense.amount.toLocaleString()}</p>
+                                    <button
+                                        onClick={() => handleDelete(expense._id)}
+                                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-400 transition cursor-pointer"
+                                        title="Delete"
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 mt-8">
+                    <Link to="/add-expense" className="block">
+                        <button className="w-full py-4 bg-black text-white text-sm font-semibold rounded-xl cursor-pointer hover:bg-gray-800 active:scale-95 transition-all duration-150">
+                            + Add New Expense
+                        </button>
+                    </Link>
+
+                    <Link to="/insights" className="block">
+                        <button className="w-full py-4 bg-blue-600 text-white text-sm font-semibold rounded-xl cursor-pointer hover:bg-blue-700 active:scale-95 transition-all duration-150">
+                            🧠 View Smart Insights
+                        </button>
+                    </Link>
+                </div>
+
+            </div>
         </div>
     );
 };
